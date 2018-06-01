@@ -1,0 +1,12 @@
+{
+    "name": "artist-web",
+    "main": "server.js",
+    "dependencies": {
+        "body-parser": "^1.18.3",
+        "express": "^4.16.3",
+        "express-session": "^1.15.6",
+        "flash": "^1.1.0",
+        "formidable": "^1.2.1",
+        "mongoose": "^5.1.3"
+    }
+}
