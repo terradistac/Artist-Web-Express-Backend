@@ -4,7 +4,6 @@ var bodyParser = require('./node_modules/body-parser');
 var mongoose = require('mongoose');
 var formidable = require('formidable');
 var fs = require('fs');
-var flash = require('flash');
 var querystring = require('querystring');
 
 mongoose.connect('mongodb://localhost:27017/Artsy');
@@ -22,19 +21,7 @@ var port = process.env.PORT || 8081;
 // =============================================================================
 var router = express.Router();
 
-// middleware to use for all requests
-router.use(function (req, res, next) {
-    // do logging
-    console.log('Something is happening.');
-    next();
-});
-
-// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
-router.get('/', function (req, res) {
-    res.json({
-        message: 'hooray! welcome to our api!'
-    });
-});
+// route to edit user profile info
 router.route('/user/info/:user_id')
     .post(function (req, res) {
         User.findByIdAndUpdate(
@@ -56,6 +43,22 @@ router.route('/user/info/:user_id')
                 }
             })
     });
+// route to retrieve user profile information and return as a JSON file
+router.route('/user/info/:user_id')
+    .get(function (req, res) {
+        User.findById(req.params.user_id,
+            function (err, user) {
+                if (err)
+                    throw err;
+                var userJSON = user.local;
+                res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080");
+                res.send({
+                    'data': userJSON
+                });
+            })
+
+    })
+// route to retrive list of all artwork uploaded by a particular user
 router.route('/artwork/list/:user_id')
     .get(function (req, res) {
         User.findById(req.params.user_id,
@@ -70,7 +73,112 @@ router.route('/artwork/list/:user_id')
             })
 
     })
+// route to upload new tags into tag array
+router.route('/artwork/tags')
+    .post(function (req, res) {
+        User.findById(
+            req.body.userid,
+            function (err, user) {
+                var foundart = user.local.art.id(req.body.artworkid);
+                console.log(req.body.tag);
+                foundart.tags.push(req.body.tag);
+                console.log(foundart.tags);
+                user.save();
+                if (err) {
+                    console.error(err.stack);
+                    var data = {
+                        success: false
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                } else {
+                    var data = {
+                        success: true
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                }
+            })
 
+    })
+// route to update artwork name
+router.route('/artwork/edit')
+    .post(function (req, res) {
+        User.findById(
+            req.body.userid,
+            function (err, user) {
+                var foundart = user.local.art.id(req.body.artworkid);
+                console.log(req.body.tag);
+                foundart.artworkname = req.body.artworkname;
+                console.log(foundart.artworkname);
+                user.save();
+                if (err) {
+                    console.error(err.stack);
+                    var data = {
+                        success: false
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                } else {
+                    var data = {
+                        success: true
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                }
+            })
+
+    })
+// route to delete tags
+router.route('/artwork/tags/delete')
+    .post(function (req, res) {
+        User.findById(
+            req.body.userid,
+            function (err, user) {
+                var foundart = user.local.art.id(req.body.artworkid);
+                console.log(req.body.tag);
+                foundart.tags.pull(req.body.tag);
+                console.log(foundart.tags);
+                user.save();
+                if (err) {
+                    console.error(err.stack);
+                    var data = {
+                        success: false
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                } else {
+                    var data = {
+                        success: true
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                }
+            })
+
+    })
+// route to edit tags
+router.route('/artwork/tags/edit')
+    .post(function (req, res) {
+        User.findById(
+            req.body.userid,
+            function (err, user) {
+                var foundart = user.local.art.id(req.body.artworkid);
+                console.log(req.body.tag);
+                foundart.tags.pull(req.body.oldtag);
+                foundart.tags.push(req.body.tag);
+                console.log(foundart.tags);
+                user.save();
+                if (err) {
+                    console.error(err.stack);
+                    var data = {
+                        success: false
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                } else {
+                    var data = {
+                        success: true
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                }
+            })
+
+    })
+// route to upload new artwork image files and save file path in database
 router.route('/artwork/upload')
     .post(function (req, res) {
         var form = new formidable.IncomingForm();
@@ -117,6 +225,11 @@ router.route('/artwork/upload')
                 })
         });
     });
+// route to search all art for tags
+router.route('/search/artwork/tags')
+    .get(function (req, res) {
+        // add code here.
+    })
 
 app.use('/api', router);
 app.use('/public', express.static('public'));

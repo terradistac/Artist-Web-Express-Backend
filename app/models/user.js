@@ -4,7 +4,8 @@ var mongoose = require('mongoose');
 
 var ArtworkSchema = new mongoose.Schema({
     artworkname: String,
-    artworkfilelocation: String
+    artworkfilelocation: String,
+    tags: [String]
 })
 
 // define the schema for our user model
