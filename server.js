@@ -41,7 +41,8 @@ router.route('/user/info/:user_id')
                     }
                     res.redirect('http://localhost:8080/profile/editprofile?' + querystring.stringify(data));
                 }
-            })
+            }
+        )
     });
 // route to retrieve user profile information and return as a JSON file
 router.route('/user/info/:user_id')
@@ -55,8 +56,8 @@ router.route('/user/info/:user_id')
                 res.send({
                     'data': userJSON
                 });
-            })
-
+            }
+        )
     })
 // route to retrive list of all artwork uploaded by a particular user
 router.route('/artwork/list/:user_id')
@@ -70,8 +71,8 @@ router.route('/artwork/list/:user_id')
                 res.send({
                     'data': artJSON
                 });
-            })
-
+            }
+        )
     })
 // route to upload new tags into tag array
 router.route('/artwork/tags')
@@ -96,8 +97,8 @@ router.route('/artwork/tags')
                     }
                     res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
                 }
-            })
-
+            }
+        )
     })
 // route to update artwork name
 router.route('/artwork/edit')
@@ -122,8 +123,31 @@ router.route('/artwork/edit')
                     }
                     res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
                 }
-            })
-
+            }
+        )
+    })
+// route to delete artwork
+    router.route('/artwork/delete')
+    .post(function (req, res) {
+        User.findById(
+            req.body.userid,
+            function (err, user) {
+                user.local.art.pull(req.body.artworkid);
+                user.save();
+                if (err) {
+                    console.error(err.stack);
+                    var data = {
+                        success: false
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                } else {
+                    var data = {
+                        success: true
+                    }
+                    res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
+                }
+            }
+        )
     })
 // route to delete tags
 router.route('/artwork/tags/delete')
@@ -148,8 +172,8 @@ router.route('/artwork/tags/delete')
                     }
                     res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
                 }
-            })
-
+            }
+        )
     })
 // route to edit tags
 router.route('/artwork/tags/edit')
@@ -175,8 +199,8 @@ router.route('/artwork/tags/edit')
                     }
                     res.redirect('http://localhost:8080/profile/editartwork?' + querystring.stringify(data));
                 }
-            })
-
+            }
+        )
     })
 // route to upload new artwork image files and save file path in database
 router.route('/artwork/upload')
@@ -222,13 +246,27 @@ router.route('/artwork/upload')
                         }
                         res.redirect('http://localhost:8080/profile/submitartwork?' + querystring.stringify(data));
                     }
-                })
+                }
+            )
         });
     });
-// route to search all art for tags
-router.route('/search/artwork/tags')
+// route to search for a particular artist
+router.route('/search/artists/:search')
     .get(function (req, res) {
-        // add code here.
+        var regex = new RegExp(req.params.search, "ig");
+        User.find({
+                "local.name": regex
+            }, 'local.name local.biography local.email local.art',
+            function (err, user) {
+                if (err)
+                    throw err;
+                var userJSON = user;
+                res.setHeader("Access-Control-Allow-Origin", "http://localhost:8080");
+                res.send({
+                    'data': userJSON
+                });
+            }
+        )
     })
 
 app.use('/api', router);
